@@ -1,0 +1,506 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="theme-color" content="#ff8fc4">
+<link rel="manifest" href="/manifest.json">
+<link rel="apple-touch-icon" href="/icon.svg">
+<title>Tabuada Mágica da Isadora 🦄</title>
+<link href="https://fonts.googleapis.com/css2?family=Nunito:wght@700;800;900&family=Fredoka+One&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --pinkie: #ff8fc4;
+    --twilight: #b98cff;
+    --rainbow: #7fd4f2;
+    --sun: #ffd76a;
+    --mint: #8be6b8;
+    --ink: #5a2a72;
+    --card-light: #fffaf3;
+  }
+  *{box-sizing:border-box;}
+  html,body{
+    margin:0;padding:0;width:100%;min-height:100%;
+    font-family:'Nunito',sans-serif;
+    background:linear-gradient(135deg,var(--pinkie),var(--twilight),var(--rainbow));
+    background-size:300% 300%;
+    animation:bgshift 18s ease infinite;
+    color:var(--ink);
+    overflow-x:hidden;
+  }
+  @keyframes bgshift{
+    0%{background-position:0% 50%;}
+    50%{background-position:100% 50%;}
+    100%{background-position:0% 50%;}
+  }
+
+  .decor{
+    position:fixed; font-size:2.2rem; opacity:.55; pointer-events:none; z-index:0;
+    animation:float 7s ease-in-out infinite;
+  }
+  @keyframes float{
+    0%,100%{transform:translateY(0) rotate(0deg);}
+    50%{transform:translateY(-18px) rotate(8deg);}
+  }
+
+  #app{
+    position:relative; z-index:1;
+    min-height:100vh;
+    display:flex; flex-direction:column; align-items:center; justify-content:flex-start;
+    padding:clamp(14px,3vw,28px) 14px 40px;
+    text-align:center;
+  }
+
+  /* ---- Start screen ---- */
+  #start-screen{
+    position:fixed; inset:0; z-index:100;
+    background:radial-gradient(circle at 50% 30%, #fff8ec 0%, #ffe3f3 60%, #e6d6ff 100%);
+    display:flex; flex-direction:column; align-items:center; justify-content:center;
+    gap:18px; padding:24px; text-align:center;
+  }
+  #start-screen h1{
+    font-family:'Fredoka One',cursive;
+    font-size:clamp(1.8rem,7vw,2.6rem);
+    color:var(--ink);
+    margin:0;
+  }
+  #start-screen p{ font-size:clamp(1rem,3.5vw,1.2rem); font-weight:800; margin:0; max-width:340px;}
+  .big-btn{
+    font-family:'Fredoka One',cursive;
+    background:linear-gradient(135deg,var(--pinkie),var(--twilight));
+    color:#fff; border:none; padding:18px 44px;
+    font-size:clamp(1.2rem,4.5vw,1.6rem);
+    border-radius:60px; cursor:pointer;
+    box-shadow:0 10px 0 rgba(90,42,114,0.25);
+    transition:transform .15s;
+  }
+  .big-btn:active{ transform:translateY(6px); box-shadow:0 4px 0 rgba(90,42,114,0.25); }
+
+  /* ---- Header ---- */
+  h1.title{
+    font-family:'Fredoka One',cursive;
+    font-size:clamp(1.5rem,5.5vw,2.2rem);
+    color:#fff; text-shadow:2px 2px 0 var(--ink);
+    margin:4px 0 2px;
+  }
+  .subtitle{
+    font-weight:800; font-size:clamp(.9rem,3vw,1.05rem);
+    background:rgba(255,255,255,.6); padding:5px 16px; border-radius:20px; margin-bottom:14px;
+  }
+
+  /* ---- Controls ---- */
+  .panel{
+    background:var(--card-light); border:3px solid var(--twilight);
+    border-radius:24px; padding:14px 20px; margin-bottom:16px;
+    display:flex; flex-wrap:wrap; gap:12px; align-items:center; justify-content:center;
+    box-shadow:0 8px 18px rgba(0,0,0,.12);
+    width:100%; max-width:420px;
+  }
+  .panel label{ font-weight:900; font-size:1rem; }
+  select{
+    font-family:'Nunito',sans-serif; font-weight:800; font-size:1rem;
+    padding:8px 14px; border-radius:16px; border:2px solid var(--pinkie);
+    background:#fff; color:var(--ink); cursor:pointer; outline:none;
+  }
+  #mute-btn{
+    background:none; border:2px solid var(--twilight); border-radius:50%;
+    width:40px; height:40px; font-size:1.1rem; cursor:pointer;
+  }
+
+  /* ---- Stats row ---- */
+  .stats-row{
+    display:flex; gap:10px; flex-wrap:wrap; justify-content:center; margin-bottom:16px;
+  }
+  .stat-pill{
+    background:rgba(255,255,255,.75); border-radius:16px; padding:7px 14px;
+    font-weight:900; font-size:.95rem; box-shadow:inset 0 2px 4px rgba(0,0,0,.06);
+  }
+
+  .progress-wrap{
+    width:100%; max-width:340px; height:14px; background:rgba(255,255,255,.55);
+    border-radius:10px; overflow:hidden; margin-bottom:22px; box-shadow:inset 0 2px 4px rgba(0,0,0,.15);
+  }
+  .progress-fill{
+    height:100%; width:0%; background:linear-gradient(90deg,var(--mint),var(--rainbow));
+    transition:width .4s ease;
+  }
+
+  /* ---- Card ---- */
+  .scene{ width:min(86vw,300px); height:min(52vw,340px); perspective:1200px; margin-bottom:20px;}
+  .card{
+    width:100%; height:100%; position:relative; transform-style:preserve-3d;
+    transition:transform .7s cubic-bezier(.175,.885,.32,1.275);
+  }
+  .card.flipped{ transform:rotateY(180deg); }
+  .card.shake{ animation:shake .5s; }
+  @keyframes shake{
+    0%,100%{transform:translateX(0);}
+    20%{transform:translateX(-10px);}
+    40%{transform:translateX(10px);}
+    60%{transform:translateX(-8px);}
+    80%{transform:translateX(8px);}
+  }
+  .face{
+    position:absolute; inset:0; backface-visibility:hidden;
+    border-radius:28px; border:5px solid #fff;
+    display:flex; flex-direction:column; align-items:center; justify-content:center;
+    font-family:'Fredoka One',cursive;
+    box-shadow:0 14px 30px rgba(0,0,0,.2);
+  }
+  .front{ background:linear-gradient(135deg,#fff,var(--sun)); color:var(--ink); }
+  .front .q{ font-size:clamp(2.4rem,10vw,3.6rem); line-height:1.15; }
+  .back{ background:linear-gradient(135deg,var(--twilight),var(--pinkie)); color:#fff; transform:rotateY(180deg); }
+  .back .msg{ font-size:clamp(1.1rem,4.5vw,1.4rem); margin-bottom:6px; padding:0 14px;}
+  .back .ans{ font-size:clamp(2.8rem,11vw,3.8rem); text-shadow:3px 3px 0 var(--ink); }
+  .back .em{ font-size:2rem; margin-top:6px; }
+
+  /* ---- Answer form ---- */
+  #answer-form{ display:flex; gap:10px; align-items:center; margin-bottom:10px; }
+  #answer-input{
+    width:110px; font-size:1.5rem; font-weight:900; text-align:center;
+    padding:10px; border-radius:16px; border:3px solid var(--twilight);
+    font-family:'Nunito',sans-serif; outline:none; color:var(--ink);
+  }
+  #answer-input:focus{ border-color:var(--pinkie); }
+  #submit-btn, #next-btn{
+    font-family:'Fredoka One',cursive; background:var(--mint); color:var(--ink);
+    border:none; padding:12px 22px; border-radius:18px; font-size:1.1rem; cursor:pointer;
+    box-shadow:0 6px 0 rgba(90,42,114,.2);
+  }
+  #submit-btn:active,#next-btn:active{ transform:translateY(4px); box-shadow:0 2px 0 rgba(90,42,114,.2); }
+  #next-btn{ display:none; background:var(--pinkie); color:#fff; }
+
+  /* ---- End screen ---- */
+  #end-panel{
+    display:none; background:var(--card-light); border:4px solid var(--twilight);
+    border-radius:28px; padding:26px 22px; max-width:340px; box-shadow:0 12px 26px rgba(0,0,0,.18);
+  }
+  #end-panel h2{ font-family:'Fredoka One',cursive; color:var(--ink); margin-top:0; font-size:1.6rem;}
+  #end-panel .big-emoji{ font-size:3rem; }
+  #end-panel p{ font-weight:800; font-size:1.05rem; }
+
+  .confetti{
+    position:fixed; top:-20px; z-index:200; pointer-events:none;
+    animation:fall linear forwards;
+  }
+  @keyframes fall{
+    to{ transform:translateY(110vh) rotate(360deg); opacity:0.9; }
+  }
+
+  @media (prefers-reduced-motion: reduce){
+    *{ animation-duration:.001ms !important; transition-duration:.001ms !important; }
+  }
+
+  #exit-fs-btn{
+    position:fixed; top:10px; right:10px; z-index:300;
+    background:rgba(255,255,255,.6); border:none; border-radius:50%;
+    width:40px; height:40px; font-size:1.1rem; cursor:pointer; display:none;
+  }
+  :fullscreen #exit-fs-btn{ display:block; }
+  :-webkit-full-screen #exit-fs-btn{ display:block; }
+  :-moz-full-screen #exit-fs-btn{ display:block; }
+  :-ms-fullscreen #exit-fs-btn{ display:block; }
+</style>
+</head>
+<body>
+
+<div id="start-screen">
+  <h1>Oi, Isadora! 🦄</h1>
+  <p>Vamos treinar a tabuada com as amigas de Equestria?</p>
+  <button class="big-btn" onclick="startApp()">Começar a brincadeira! ✨</button>
+</div>
+
+<div id="app">
+  <button id="exit-fs-btn" onclick="exitFullScreen()" title="Sair da tela cheia">✖️</button>
+  <div class="decor" style="top:6%; left:6%;">💖</div>
+  <div class="decor" style="top:10%; right:8%; animation-delay:1s;">🌈</div>
+  <div class="decor" style="bottom:12%; left:8%; animation-delay:2s;">🧁</div>
+  <div class="decor" style="bottom:8%; right:10%; animation-delay:.5s;">✨</div>
+
+  <h1 class="title">🌈 Tabuada Mágica 🦄</h1>
+  <p class="subtitle">Descubra os números mágicos de Equestria!</p>
+
+  <div class="panel">
+    <label for="table-select">Qual tabuada?</label>
+    <select id="table-select">
+      <option value="random">✨ Todas Misturadas ✨</option>
+      <option value="1">Tabuada do 1</option>
+      <option value="2">Tabuada do 2</option>
+      <option value="3">Tabuada do 3</option>
+      <option value="4">Tabuada do 4</option>
+      <option value="5">Tabuada do 5 🍎</option>
+      <option value="6">Tabuada do 6</option>
+      <option value="7">Tabuada do 7 🌈</option>
+      <option value="8">Tabuada do 8</option>
+      <option value="9">Tabuada do 9 🎈</option>
+      <option value="10">Tabuada do 10</option>
+    </select>
+    <button id="mute-btn" title="Som">🔊</button>
+  </div>
+
+  <div class="stats-row">
+    <div class="stat-pill">⭐ Estrelas: <span id="stars">0</span></div>
+    <div class="stat-pill">🔥 Sequência: <span id="streak">0</span></div>
+    <div class="stat-pill">🏆 Recorde: <span id="best">0</span></div>
+  </div>
+
+  <div class="progress-wrap"><div class="progress-fill" id="progress-fill"></div></div>
+
+  <div class="scene" id="scene">
+    <div class="card" id="flashcard">
+      <div class="face front">
+        <div class="q" id="question">2 x 2</div>
+      </div>
+      <div class="face back">
+        <div class="msg" id="feedback-msg">Isso mesmo!</div>
+        <div class="ans" id="answer">4</div>
+        <div class="em" id="emoji">🦄</div>
+      </div>
+    </div>
+  </div>
+
+  <form id="answer-form" onsubmit="return checkAnswer(event)">
+    <input type="tel" inputmode="numeric" id="answer-input" placeholder="?" autocomplete="off">
+    <button type="submit" id="submit-btn">Confirmar ✅</button>
+  </form>
+  <button id="next-btn" onclick="nextCard()">Próxima Carta! 🌟</button>
+
+  <div id="end-panel">
+    <div class="big-emoji">🎉👑🎉</div>
+    <h2>Você terminou, Isadora!</h2>
+    <p id="end-summary"></p>
+    <button class="big-btn" onclick="restart()">Jogar de novo! 🦄</button>
+  </div>
+</div>
+
+<script>
+  if ('serviceWorker' in navigator) {
+    window.addEventListener('load', () => {
+      navigator.serviceWorker.register('/sw.js').then(reg => {
+        console.log('ServiceWorker registered');
+      }).catch(err => {
+        console.log('ServiceWorker registration failed:', err);
+      });
+    });
+  }
+
+  const emojisGood = ['🦄','🌈','💖','🧁','🎈','✨','🍎','🎀','🦋','🌟','👑'];
+  const startScreen = document.getElementById('start-screen');
+  const card = document.getElementById('flashcard');
+  const questionEl = document.getElementById('question');
+  const answerEl = document.getElementById('answer');
+  const emojiEl = document.getElementById('emoji');
+  const feedbackEl = document.getElementById('feedback-msg');
+  const selectEl = document.getElementById('table-select');
+  const starsEl = document.getElementById('stars');
+  const streakEl = document.getElementById('streak');
+  const bestEl = document.getElementById('best');
+  const progressFill = document.getElementById('progress-fill');
+  const form = document.getElementById('answer-form');
+  const input = document.getElementById('answer-input');
+  const nextBtn = document.getElementById('next-btn');
+  const submitBtn = document.getElementById('submit-btn');
+  const endPanel = document.getElementById('end-panel');
+  const endSummary = document.getElementById('end-summary');
+  const muteBtn = document.getElementById('mute-btn');
+
+  let deck = [];
+  let deckTotal = 0;
+  let stars = 0, streak = 0, best = 0, correctCount = 0;
+  let muted = false;
+  let audioCtx = null;
+
+  function loadBest(){
+    try{ return parseInt(localStorage.getItem('tabuada_best_isadora') || '0', 10); }
+    catch(e){ return 0; }
+  }
+  function saveBest(v){
+    try{ localStorage.setItem('tabuada_best_isadora', String(v)); }catch(e){}
+  }
+  best = loadBest();
+  bestEl.textContent = best;
+
+  function ensureAudio(){
+    if(!audioCtx){
+      try{ audioCtx = new (window.AudioContext || window.webkitAudioContext)(); }
+      catch(e){ audioCtx = null; }
+    }
+  }
+  function tone(freq, dur, delay, type){
+    if(muted || !audioCtx) return;
+    const t0 = audioCtx.currentTime + delay;
+    const osc = audioCtx.createOscillator();
+    const gain = audioCtx.createGain();
+    osc.type = type || 'sine';
+    osc.frequency.setValueAtTime(freq, t0);
+    gain.gain.setValueAtTime(0.0001, t0);
+    gain.gain.exponentialRampToValueAtTime(0.18, t0 + 0.02);
+    gain.gain.exponentialRampToValueAtTime(0.0001, t0 + dur);
+    osc.connect(gain); gain.connect(audioCtx.destination);
+    osc.start(t0); osc.stop(t0 + dur + 0.02);
+  }
+  function playCorrect(){ tone(523,.16,0,'triangle'); tone(659,.16,.12,'triangle'); tone(784,.22,.24,'triangle'); }
+  function playWrong(){ tone(220,.28,0,'sawtooth'); }
+
+  muteBtn.addEventListener('click', () => {
+    muted = !muted;
+    muteBtn.textContent = muted ? '🔇' : '🔊';
+  });
+
+  function shuffle(arr){
+    for(let i = arr.length - 1; i > 0; i--){
+      const j = Math.floor(Math.random() * (i + 1));
+      [arr[i], arr[j]] = [arr[j], arr[i]];
+    }
+    return arr;
+  }
+
+  function createDeck(){
+    const table = selectEl.value;
+    let items = [];
+    if(table === 'random'){
+      for(let i = 1; i <= 10; i++) for(let j = 1; j <= 10; j++) items.push({n1:i, n2:j});
+      items = shuffle(items).slice(0, 20);
+    }else{
+      const n1 = parseInt(table, 10);
+      for(let j = 1; j <= 10; j++) items.push({n1, n2:j});
+      shuffle(items);
+    }
+    deck = items;
+    deckTotal = items.length;
+    correctCount = 0;
+    updateProgress();
+  }
+
+  function updateProgress(){
+    const done = deckTotal - deck.length;
+    const pct = deckTotal ? Math.round((done / deckTotal) * 100) : 0;
+    progressFill.style.width = pct + '%';
+  }
+
+  function newQuestion(){
+    if(deck.length === 0){
+      showEnd();
+      return;
+    }
+    const q = deck[0];
+    questionEl.innerHTML = `${q.n1} <span style="font-size:.6em;">x</span> ${q.n2}`;
+    input.value = '';
+    input.disabled = false;
+    submitBtn.style.display = 'inline-block';
+    nextBtn.style.display = 'none';
+    card.classList.remove('flipped');
+    setTimeout(() => input.focus(), 350);
+  }
+
+  function checkAnswer(e){
+    e.preventDefault();
+    ensureAudio();
+    if(deck.length === 0) return false;
+    const q = deck[0];
+    const correctVal = q.n1 * q.n2;
+    const given = parseInt(input.value, 10);
+    const isCorrect = given === correctVal;
+
+    answerEl.textContent = correctVal;
+    emojiEl.textContent = emojisGood[Math.floor(Math.random() * emojisGood.length)];
+
+    if(isCorrect){
+      feedbackEl.textContent = ['Isso mesmo!','Mandou bem!','Arrasou!','Perfeito!'][Math.floor(Math.random()*4)];
+      stars++; streak++; correctCount++;
+      playCorrect();
+      launchConfetti();
+    }else{
+      feedbackEl.textContent = 'Quase! A resposta certa é:';
+      streak = 0;
+      playWrong();
+      card.classList.add('shake');
+      setTimeout(() => card.classList.remove('shake'), 500);
+    }
+    if(streak > best){ best = streak; saveBest(best); }
+
+    starsEl.textContent = stars;
+    streakEl.textContent = streak;
+    bestEl.textContent = best;
+
+    card.classList.add('flipped');
+    input.disabled = true;
+    submitBtn.style.display = 'none';
+    nextBtn.style.display = 'inline-block';
+
+    deck.shift();
+    updateProgress();
+    return false;
+  }
+
+  function nextCard(){
+    card.classList.remove('flipped');
+    setTimeout(newQuestion, 350);
+  }
+
+  function showEnd(){
+    document.getElementById('scene').style.display = 'none';
+    form.style.display = 'none';
+    nextBtn.style.display = 'none';
+    endPanel.style.display = 'block';
+    endSummary.textContent = `Você acertou ${correctCount} de ${deckTotal} contas e ganhou ${stars} estrelas! Sua melhor sequência foi ${best}.`;
+    launchConfetti(24);
+  }
+
+  function restart(){
+    endPanel.style.display = 'none';
+    document.getElementById('scene').style.display = '';
+    form.style.display = 'flex';
+    stars = 0; streak = 0;
+    starsEl.textContent = 0; streakEl.textContent = 0;
+    createDeck();
+    newQuestion();
+  }
+
+  function launchConfetti(count){
+    const n = count || 12;
+    const colors = ['#ff8fc4','#b98cff','#7fd4f2','#ffd76a','#8be6b8'];
+    for(let i = 0; i < n; i++){
+      const el = document.createElement('div');
+      el.className = 'confetti';
+      el.textContent = ['✨','⭐','🎉','💖'][Math.floor(Math.random()*4)];
+      el.style.left = Math.random() * 100 + 'vw';
+      el.style.fontSize = (14 + Math.random()*14) + 'px';
+      el.style.color = colors[Math.floor(Math.random()*colors.length)];
+      el.style.animationDuration = (1.6 + Math.random()*1.2) + 's';
+      document.body.appendChild(el);
+      setTimeout(() => el.remove(), 3000);
+    }
+  }
+
+  selectEl.addEventListener('change', () => {
+    createDeck();
+    newQuestion();
+  });
+
+  function startApp(){
+    ensureAudio();
+    try{
+      const elem = document.documentElement;
+      const req = elem.requestFullscreen || elem.webkitRequestFullscreen || elem.msRequestFullscreen;
+      if(req){
+        const p = req.call(elem);
+        if(p && typeof p.catch === 'function') p.catch(() => {});
+      }
+    }catch(e){ /* fullscreen indisponível, segue sem ela */ }
+    startScreen.style.display = 'none';
+    createDeck();
+    newQuestion();
+  }
+
+  function exitFullScreen(){
+    if(document.exitFullscreen) document.exitFullscreen();
+    else if(document.webkitExitFullscreen) document.webkitExitFullscreen();
+    else if(document.msExitFullscreen) document.msExitFullscreen();
+  }
+</script>
+</body>
+</html>

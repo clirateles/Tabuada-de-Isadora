@@ -1,0 +1,15 @@
+{
+  "name": "Tabuada Mágica da Isadora",
+  "short_name": "Tabuada",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#ff8fc4",
+  "theme_color": "#ff8fc4",
+  "icons": [
+    {
+      "src": "/icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml"
+    }
+  ]
+}

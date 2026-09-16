@@ -1,0 +1,6 @@
+{
+  "name": "Tabuada Mágica da Isadora",
+  "description": "App de tabuada para a Isadora com tema de unicórnio, funcionando offline.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
